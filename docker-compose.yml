@@ -12,6 +12,7 @@ services:
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.websecure.auth.forward=http://auth:4181"
       - "--entrypoints.teamspeakvoice.address=:9987/udp"
       - "--entrypoints.teamspeakquery.address=:10011"
       - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
@@ -27,6 +28,20 @@ services:
       # So that Traefik can listen to the Docker events
       - "./letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
+  auth:
+    image: thomseddon/traefik-forward-auth
+    environment:
+      - PROVIDERS_GOOGLE_CLIENT_ID=your-client-id
+      - PROVIDERS_GOOGLE_CLIENT_SECRET=your-client-secret
+      - SECRET=something-random
+      - INSECURE_COOKIE=true # Example assumes no https, do not use in production
+      - DOMAIN=farsity.de
+      - AUTH_HOST=auth.farsity.de
+    labels:
+      - traefik.enable=true
+      - traefik.port=4181
+      - traefik.backend=auth
+      - traefik.frontend.rule=Host:auth.farsity.de
   whoami:
     # A container that exposes an API to show its IP address
     image: containous/whoami
@@ -54,7 +69,6 @@ services:
       - "traefik.http.routers.whoamiblog.rule=Host(`blog.farsity.de`)"
       - "traefik.http.routers.whoamiblog.entrypoints=websecure"
       - "traefik.http.routers.whoamiblog.tls.certresolver=myresolver"
-
   teamspeak:
     image: teamspeak
     labels:
@@ -68,13 +82,13 @@ services:
     environment:
       TS3SERVER_DB_PLUGIN: ts3db_mariadb
       TS3SERVER_DB_SQLCREATEPATH: create_mariadb
-      TS3SERVER_DB_HOST: db
+      TS3SERVER_DB_HOST: teamspeakdb
       TS3SERVER_DB_USER: root
       TS3SERVER_DB_PASSWORD: example
       TS3SERVER_DB_NAME: teamspeak
       TS3SERVER_DB_WAITUNTILREADY: 30
       TS3SERVER_LICENSE: accept
-  db:
+  teamspeakdb:
     image: mariadb
     restart: always
     environment:
