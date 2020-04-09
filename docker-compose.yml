@@ -33,7 +33,7 @@ services:
     #container_name: "simple-service"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.whoami.rule=Host(`suchtundordnung.de`)"
+      - "traefik.http.routers.whoami.rule=Host(`farsity.de`)"
       - "traefik.http.routers.whoami.entrypoints=websecure"
       - "traefik.http.routers.whoami.tls.certresolver=myresolver"
   whoamiapi:
@@ -42,7 +42,7 @@ services:
     #container_name: "simple-service"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.whoamiapi.rule=Host(`api.suchtundordnung.de`)"
+      - "traefik.http.routers.whoamiapi.rule=Host(`api.farsity.de`)"
       - "traefik.http.routers.whoamiapi.entrypoints=websecure"
       - "traefik.http.routers.whoamiapi.tls.certresolver=myresolver"
   whoamiblog:
@@ -51,7 +51,7 @@ services:
     #container_name: "simple-service"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.whoamiblog.rule=Host(`blog.suchtundordnung.de`)"
+      - "traefik.http.routers.whoamiblog.rule=Host(`blog.farsity.de`)"
       - "traefik.http.routers.whoamiblog.entrypoints=websecure"
       - "traefik.http.routers.whoamiblog.tls.certresolver=myresolver"
 
