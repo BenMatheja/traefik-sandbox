@@ -27,6 +27,41 @@ services:
     volumes:
       - "./letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    logging:
+      driver: "fluentd"
+      options:
+        fluentd-address: localhost:24224
+        tag: traefik.access
+
+  fluentd:
+    build: ./fluentd
+    volumes:
+      - ./fluentd/conf:/fluentd/etc
+    links:
+      - "elasticsearch"
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.2.0
+    environment:
+      - "discovery.type=single-node"
+    
+  kibana:
+    image: kibana:7.2.0
+    labels:
+      - "traefik.enable=true"
+    #     Route which handles HTTPS Traffic
+      - "traefik.http.routers.kibana.rule=Host(`kibana.farsity.de`)"
+      - "traefik.http.routers.kibana.entrypoints=websecure"
+      - "traefik.http.routers.kibana.tls.certresolver=myresolver"
+    #     Apply Forward Auth to the Service 
+      - "traefik.http.routers.kibana.middlewares=kibana"
+      - "traefik.http.middlewares.kibana.forwardauth.address=http://traefikforward:4181"
+      - "traefik.http.middlewares.kibana.forwardauth.authResponseHeaders=X-Forwarded-User"
+      - "traefik.http.middlewares.kibana.forwardauth.authResponseHeaders=X-Auth-User, X-Secret"
+      - "traefik.http.middlewares.kibana.forwardauth.trustForwardHeader=true"
 
   traefikforward:
     image: thomseddon/traefik-forward-auth
@@ -52,22 +87,21 @@ services:
       - "traefik.http.routers.traefikforward.tls.certresolver=myresolver"
       - "traefik.http.routers.traefikforward.rule=Host(`auth.farsity.de`)"
 
- # This simply validates that traefik forward authentication is working
   whoamisecure:
     image: containous/whoami
     labels:
       - "traefik.enable=true"
-#     Router to forward Port 80 tto 443
+      #  Router to forward Port 80 tto 443
       #- "traefik.http.routers.whoamisecure80.rule=Host(`api.farsity.de`)"
       #- "traefik.http.routers.whoamisecure80.entrypoints=web"
       #- "traefik.http.routers.whoamisecure80.middlewares=httpsredirect"
       #- "traefik.http.middlewares.httpsredirect.redirectscheme.scheme=https"
       #- "traefik.http.middlewares.httpsredirect.redirectscheme.permanent=true"
-#     Route which handles HTTPS Traffic
+      #  Route which handles HTTPS Traffic
       - "traefik.http.routers.whoamisecure.rule=Host(`api.farsity.de`)"
       - "traefik.http.routers.whoamisecure.entrypoints=websecure"
       - "traefik.http.routers.whoamisecure.tls.certresolver=myresolver"
-#     Apply Forward Auth to the Service 
+      #  Apply Forward Auth to the Service 
       - "traefik.http.routers.whoamisecure.middlewares=whoamisecure"
       - "traefik.http.middlewares.whoamisecure.forwardauth.address=http://traefikforward:4181"
       - "traefik.http.middlewares.whoamisecure.forwardauth.authResponseHeaders=X-Forwarded-User"
