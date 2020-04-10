@@ -5,7 +5,8 @@ All the steps were done using the awesome [traefik documentation](https://docs.t
 `` docker-compose.yml `` features
 
 * Using traefik as edge router handling Letsencrypt certificate delivery
-* Domain (suchtundordnung.de) with multiple subdomains (api and blog) running sample services(whoami)
+* Domain (farsity.de) with multiple subdomains (api and blog) running sample services (whoami)
+* api.farsity.de is secured via Forward Authentication with Google oAuth
 * An UDP router for supporting teamspeak3 traffic
 * Exposed traefik api and dashboard - Obviously not for productive use!
 
