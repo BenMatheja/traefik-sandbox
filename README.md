@@ -12,6 +12,7 @@ All the steps were done using the awesome [traefik documentation](https://docs.t
 
 ## Secure a Service with Forward Authentication
 To setup Forward Authentication via external idP i'm using the traefik-forward-auth container of thomseddon.
+See more at [Blog post on how to secure the services](http://matheja.me/2020/04/10/secure-your-services-with-traefik-and-google-oauth.html)
 
 ````yaml
  traefikforward:
