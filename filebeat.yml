@@ -1,0 +1,25 @@
+filebeat.autodiscover:
+ providers:
+   - type: docker
+     hints.enabled: true
+     templates:
+       - condition:
+           equals.docker.container.image: '*'
+         config:
+           - type: container
+             paths:
+               - /var/lib/docker/containers/${data.docker.container.id}/*.log
+
+                  
+# filebeat.inputs:
+# - type: docker
+#     enabled: true
+    # containers.ids:
+    #     - "*"
+    # processors:
+    #     - add_docker_metadata:
+setup.dashboards.enabled: true
+setup.kibana.host: "kibana:5601"
+output.elasticsearch:
+    hosts: ["elasticsearch:9200"]
+#logging.level: debug
