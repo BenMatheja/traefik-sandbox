@@ -55,8 +55,6 @@ services:
  # This simply validates that traefik forward authentication is working
   whoamisecure:
     image: containous/whoami
-  #  networks:
-    #  - traefik_public
     labels:
       - "traefik.enable=true"
 #     Router to forward Port 80 tto 443
@@ -75,60 +73,43 @@ services:
       - "traefik.http.middlewares.whoamisecure.forwardauth.authResponseHeaders=X-Forwarded-User"
       - "traefik.http.middlewares.whoamisecure.forwardauth.authResponseHeaders=X-Auth-User, X-Secret"
       - "traefik.http.middlewares.whoamisecure.forwardauth.trustForwardHeader=true"
-      # traefik.frontend.auth.forward.address=http://traefik-forward-auth:4181
-      #- traefik.frontend.auth.forward.authResponseHeaders=X-Forwarded-User
-      #- traefik.frontend.auth.forward.trustForwardHeader=true
-  # whoami:
-  #   # A container that exposes an API to show its IP address
-  #   image: containous/whoami
-  #   #container_name: "simple-service"
-  #   labels:
-  #     - "traefik.enable=true"
-  #     - "traefik.http.routers.whoami.rule=Host(`farsity.de`)"
-  #     - "traefik.http.routers.whoami.entrypoints=websecure"
-  #     - "traefik.http.routers.whoami.tls.certresolver=myresolver"
-  # whoamiapi:
-  #   # A container that exposes an API to show its IP address
-  #   image: containous/whoami
-  #   #container_name: "simple-service"
-  #   labels:
-  #     - "traefik.enable=true"
-  #     - "traefik.http.routers.whoamiapi.rule=Host(`api.farsity.de`)"
-  #     - "traefik.http.routers.whoamiapi.entrypoints=websecure"
-  #     - "traefik.http.routers.whoamiapi.tls.certresolver=myresolver"
-  # whoamiblog:
-  #   # A container that exposes an API to show its IP address
-  #   image: containous/whoami
-  #   #container_name: "simple-service"
-  #   labels:
-  #     - "traefik.enable=true"
-  #     - "traefik.http.routers.whoamiblog.rule=Host(`blog.farsity.de`)"
-  #     - "traefik.http.routers.whoamiblog.entrypoints=websecure"
-  #     - "traefik.http.routers.whoamiblog.tls.certresolver=myresolver"
-  # teamspeak:
-  #   image: teamspeak
-  #   labels:
-  #     - "traefik.enable=true"
-  #     - "traefik.udp.routers.teamspeak.entrypoints=teamspeakvoice"
-  #     - "traefik.tcp.routers.teamspeak.entrypoints=teamspeakquery"
-  #   restart: always
-  #   #ports:
-  #     #- 10011:10011
-  #     #- 30033:30033
-  #   environment:
-  #     TS3SERVER_DB_PLUGIN: ts3db_mariadb
-  #     TS3SERVER_DB_SQLCREATEPATH: create_mariadb
-  #     TS3SERVER_DB_HOST: teamspeakdb
-  #     TS3SERVER_DB_USER: root
-  #     TS3SERVER_DB_PASSWORD: example
-  #     TS3SERVER_DB_NAME: teamspeak
-  #     TS3SERVER_DB_WAITUNTILREADY: 30
-  #     TS3SERVER_LICENSE: accept
-  # teamspeakdb:
-  #   image: mariadb
-  #   restart: always
-  #   environment:
-  #     MYSQL_ROOT_PASSWORD: example
-  #     MYSQL_DATABASE: teamspeak
-#networks: 
-#  traefik_public:
+  whoami:
+    # A container that exposes an API to show its IP address
+    image: containous/whoami
+    #container_name: "simple-service"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami.rule=Host(`farsity.de`)"
+      - "traefik.http.routers.whoami.entrypoints=websecure"
+      - "traefik.http.routers.whoami.tls.certresolver=myresolver"
+  whoamiblog:
+    # A container that exposes an API to show its IP address
+    image: containous/whoami
+    #container_name: "simple-service"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoamiblog.rule=Host(`blog.farsity.de`)"
+      - "traefik.http.routers.whoamiblog.entrypoints=websecure"
+      - "traefik.http.routers.whoamiblog.tls.certresolver=myresolver"
+  teamspeak:
+    image: teamspeak
+    labels:
+      - "traefik.enable=true"
+      - "traefik.udp.routers.teamspeak.entrypoints=teamspeakvoice"
+      - "traefik.tcp.routers.teamspeak.entrypoints=teamspeakquery"
+    restart: always
+    environment:
+      TS3SERVER_DB_PLUGIN: ts3db_mariadb
+      TS3SERVER_DB_SQLCREATEPATH: create_mariadb
+      TS3SERVER_DB_HOST: teamspeakdb
+      TS3SERVER_DB_USER: root
+      TS3SERVER_DB_PASSWORD: example
+      TS3SERVER_DB_NAME: teamspeak
+      TS3SERVER_DB_WAITUNTILREADY: 30
+      TS3SERVER_LICENSE: accept
+  teamspeakdb:
+    image: mariadb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: example
+      MYSQL_DATABASE: teamspeak
