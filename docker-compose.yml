@@ -16,8 +16,8 @@ services:
       - "--certificatesresolvers.myresolver.acme.email=info@suchtundordnung.de"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
       # These here are both debug settings, remove them for production use
-      - "--api.insecure=true"
-      - "--log.level=DEBUG"
+      # - "--api.insecure=true"
+      #- "--log.level=DEBUG"
       #- "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
     ports:
       #- "80:80"
@@ -27,42 +27,6 @@ services:
     volumes:
       - "./letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
-    logging:
-      driver: "fluentd"
-      options:
-        fluentd-address: localhost:24224
-        tag: traefik.access
-
-  fluentd:
-    build: ./fluentd
-    volumes:
-      - ./fluentd/conf:/fluentd/etc
-    links:
-      - "elasticsearch"
-    ports:
-      - "24224:24224"
-      - "24224:24224/udp"
-
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.2.0
-    environment:
-      - "discovery.type=single-node"
-    
-  kibana:
-    image: kibana:7.2.0
-    labels:
-      - "traefik.enable=true"
-    #     Route which handles HTTPS Traffic
-      - "traefik.http.routers.kibana.rule=Host(`kibana.farsity.de`)"
-      - "traefik.http.routers.kibana.entrypoints=websecure"
-      - "traefik.http.routers.kibana.tls.certresolver=myresolver"
-    #     Apply Forward Auth to the Service 
-      - "traefik.http.routers.kibana.middlewares=kibana"
-      - "traefik.http.middlewares.kibana.forwardauth.address=http://traefikforward:4181"
-      - "traefik.http.middlewares.kibana.forwardauth.authResponseHeaders=X-Forwarded-User"
-      - "traefik.http.middlewares.kibana.forwardauth.authResponseHeaders=X-Auth-User, X-Secret"
-      - "traefik.http.middlewares.kibana.forwardauth.trustForwardHeader=true"
-
   traefikforward:
     image: thomseddon/traefik-forward-auth
     container_name: traefikforward
@@ -86,7 +50,54 @@ services:
       - "traefik.http.routers.traefikforward.entrypoints=websecure"
       - "traefik.http.routers.traefikforward.tls.certresolver=myresolver"
       - "traefik.http.routers.traefikforward.rule=Host(`auth.farsity.de`)"
-
+  metricbeat:
+    container_name: "metricbeat"
+    image: docker.elastic.co/beats/metricbeat:7.6.0
+    command: --strict.perms=false -e
+    user: root
+    environment: 
+      - "KIBANA_HOST=kibana"
+    volumes:
+      - "./metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro"
+      - /proc:/hostfs/proc:ro
+      - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
+      - /:/hostfs:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+  filebeat:
+    container_name: "filebeat"
+    image: docker.elastic.co/beats/filebeat:7.6.0
+    command: --strict.perms=false -e
+    user: root
+    volumes:
+      - "./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      # This is needed for filebeat to load container log path as specified in filebeat.yml
+      - "/var/lib/docker/containers/:/var/lib/docker/containers/:ro"
+      # This is needed for filebeat to load logs for system and auth modules
+      - "/var/log/:/var/log/:ro"
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.6.0
+    container_name: "kibana"
+    labels:
+      - "traefik.enable=true"
+    #     Route which handles HTTPS Traffic
+      - "traefik.http.routers.kibana.rule=Host(`kibana.farsity.de`)"
+      - "traefik.http.routers.kibana.entrypoints=websecure"
+      - "traefik.http.routers.kibana.tls.certresolver=myresolver"
+    #     Apply Forward Auth to the Service 
+      - "traefik.http.routers.kibana.middlewares=kibana"
+      - "traefik.http.middlewares.kibana.forwardauth.address=http://traefikforward:4181"
+      - "traefik.http.middlewares.kibana.forwardauth.authResponseHeaders=X-Forwarded-User"
+      - "traefik.http.middlewares.kibana.forwardauth.authResponseHeaders=X-Auth-User, X-Secret"
+      - "traefik.http.middlewares.kibana.forwardauth.trustForwardHeader=true"
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.6.0
+    container_name: elasticsearch
+    environment:
+      - "discovery.type=single-node"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data 
+  
   whoamisecure:
     image: containous/whoami
     labels:
@@ -107,43 +118,28 @@ services:
       - "traefik.http.middlewares.whoamisecure.forwardauth.authResponseHeaders=X-Forwarded-User"
       - "traefik.http.middlewares.whoamisecure.forwardauth.authResponseHeaders=X-Auth-User, X-Secret"
       - "traefik.http.middlewares.whoamisecure.forwardauth.trustForwardHeader=true"
-  whoami:
-    # A container that exposes an API to show its IP address
-    image: containous/whoami
-    #container_name: "simple-service"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.whoami.rule=Host(`farsity.de`)"
-      - "traefik.http.routers.whoami.entrypoints=websecure"
-      - "traefik.http.routers.whoami.tls.certresolver=myresolver"
-  whoamiblog:
-    # A container that exposes an API to show its IP address
-    image: containous/whoami
-    #container_name: "simple-service"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.whoamiblog.rule=Host(`blog.farsity.de`)"
-      - "traefik.http.routers.whoamiblog.entrypoints=websecure"
-      - "traefik.http.routers.whoamiblog.tls.certresolver=myresolver"
-  teamspeak:
-    image: teamspeak
-    labels:
-      - "traefik.enable=true"
-      - "traefik.udp.routers.teamspeak.entrypoints=teamspeakvoice"
-      - "traefik.tcp.routers.teamspeak.entrypoints=teamspeakquery"
-    restart: always
-    environment:
-      TS3SERVER_DB_PLUGIN: ts3db_mariadb
-      TS3SERVER_DB_SQLCREATEPATH: create_mariadb
-      TS3SERVER_DB_HOST: teamspeakdb
-      TS3SERVER_DB_USER: root
-      TS3SERVER_DB_PASSWORD: example
-      TS3SERVER_DB_NAME: teamspeak
-      TS3SERVER_DB_WAITUNTILREADY: 30
-      TS3SERVER_LICENSE: accept
-  teamspeakdb:
-    image: mariadb
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: example
-      MYSQL_DATABASE: teamspeak
+  # teamspeak:
+  #   image: teamspeak
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.udp.routers.teamspeak.entrypoints=teamspeakvoice"
+  #     - "traefik.tcp.routers.teamspeak.entrypoints=teamspeakquery"
+  #   restart: always
+  #   environment:
+  #     TS3SERVER_DB_PLUGIN: ts3db_mariadb
+  #     TS3SERVER_DB_SQLCREATEPATH: create_mariadb
+  #     TS3SERVER_DB_HOST: teamspeakdb
+  #     TS3SERVER_DB_USER: root
+  #     TS3SERVER_DB_PASSWORD: example
+  #     TS3SERVER_DB_NAME: teamspeak
+  #     TS3SERVER_DB_WAITUNTILREADY: 30
+  #     TS3SERVER_LICENSE: accept
+  # teamspeakdb:
+  #   image: mariadb
+  #   restart: always
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: example
+  #     MYSQL_DATABASE: teamspeak
+volumes:
+  esdata:
+    driver: local
