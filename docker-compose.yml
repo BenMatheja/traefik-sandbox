@@ -1,60 +1,96 @@
 version: '3.3'
-
 services:
-
   traefik:
     # The official v2 Traefik docker image
     image: traefik:v2.2
     # Enables the web UI and tells Traefik to listen to docker
     container_name: "traefik"
     command:
-      - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
+     # - "--entrypoints.http.address=:80"
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.teamspeakvoice.address=:9987/udp"
       - "--entrypoints.teamspeakquery.address=:10011"
       - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
       - "--certificatesresolvers.myresolver.acme.email=info@suchtundordnung.de"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      # These here are both debug settings, remove them for production use
+      - "--api.insecure=true"
       - "--log.level=DEBUG"
-      - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      #- "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
     ports:
+      #- "80:80"
       - "443:443"
       - "8080:8080"
       - "9987:9987/udp"
     volumes:
-      # So that Traefik can listen to the Docker events
       - "./letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
+  traefikforward:
+    image: thomseddon/traefik-forward-auth
+    container_name: traefikforward
+    environment:
+      # These Variables are injected via environment file
+      #- PROVIDERS_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      #- PROVIDERS_GOOGLE_CLIENT_SECRET=GOOGLE_CLIENT_SECRET
+      #- SECRET=${SECRET}
+      #- INSECURE_COOKIE=true # Example assumes no https, do not use in production
+      #- WHITELIST=${WHITELIST}
+      - DOMAIN=farsity.de
+      - AUTH_HOST=auth.farsity.de
+      - LOG_LEVEL=debug
+    env_file: 
+      - ./traefik-auth.env
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.traefikforward.loadbalancer.server.port=4181"
+      - "traefik.http.middlewares.traefikforward.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.traefikforward.redirectscheme.permanent=true"
+      - "traefik.http.routers.traefikforward.entrypoints=websecure"
+      - "traefik.http.routers.traefikforward.tls.certresolver=myresolver"
+      - "traefik.http.routers.traefikforward.rule=Host(`auth.farsity.de`)"
+
+ # This simply validates that traefik forward authentication is working
+  whoamisecure:
+    image: containous/whoami
+    labels:
+      - "traefik.enable=true"
+#     Router to forward Port 80 tto 443
+      #- "traefik.http.routers.whoamisecure80.rule=Host(`api.farsity.de`)"
+      #- "traefik.http.routers.whoamisecure80.entrypoints=web"
+      #- "traefik.http.routers.whoamisecure80.middlewares=httpsredirect"
+      #- "traefik.http.middlewares.httpsredirect.redirectscheme.scheme=https"
+      #- "traefik.http.middlewares.httpsredirect.redirectscheme.permanent=true"
+#     Route which handles HTTPS Traffic
+      - "traefik.http.routers.whoamisecure.rule=Host(`api.farsity.de`)"
+      - "traefik.http.routers.whoamisecure.entrypoints=websecure"
+      - "traefik.http.routers.whoamisecure.tls.certresolver=myresolver"
+#     Apply Forward Auth to the Service 
+      - "traefik.http.routers.whoamisecure.middlewares=whoamisecure"
+      - "traefik.http.middlewares.whoamisecure.forwardauth.address=http://traefikforward:4181"
+      - "traefik.http.middlewares.whoamisecure.forwardauth.authResponseHeaders=X-Forwarded-User"
+      - "traefik.http.middlewares.whoamisecure.forwardauth.authResponseHeaders=X-Auth-User, X-Secret"
+      - "traefik.http.middlewares.whoamisecure.forwardauth.trustForwardHeader=true"
   whoami:
     # A container that exposes an API to show its IP address
     image: containous/whoami
     #container_name: "simple-service"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.whoami.rule=Host(`suchtundordnung.de`)"
+      - "traefik.http.routers.whoami.rule=Host(`farsity.de`)"
       - "traefik.http.routers.whoami.entrypoints=websecure"
       - "traefik.http.routers.whoami.tls.certresolver=myresolver"
-  whoamiapi:
-    # A container that exposes an API to show its IP address
-    image: containous/whoami
-    #container_name: "simple-service"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.whoamiapi.rule=Host(`api.suchtundordnung.de`)"
-      - "traefik.http.routers.whoamiapi.entrypoints=websecure"
-      - "traefik.http.routers.whoamiapi.tls.certresolver=myresolver"
   whoamiblog:
     # A container that exposes an API to show its IP address
     image: containous/whoami
     #container_name: "simple-service"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.whoamiblog.rule=Host(`blog.suchtundordnung.de`)"
+      - "traefik.http.routers.whoamiblog.rule=Host(`blog.farsity.de`)"
       - "traefik.http.routers.whoamiblog.entrypoints=websecure"
       - "traefik.http.routers.whoamiblog.tls.certresolver=myresolver"
-
   teamspeak:
     image: teamspeak
     labels:
@@ -62,19 +98,16 @@ services:
       - "traefik.udp.routers.teamspeak.entrypoints=teamspeakvoice"
       - "traefik.tcp.routers.teamspeak.entrypoints=teamspeakquery"
     restart: always
-    #ports:
-      #- 10011:10011
-      #- 30033:30033
     environment:
       TS3SERVER_DB_PLUGIN: ts3db_mariadb
       TS3SERVER_DB_SQLCREATEPATH: create_mariadb
-      TS3SERVER_DB_HOST: db
+      TS3SERVER_DB_HOST: teamspeakdb
       TS3SERVER_DB_USER: root
       TS3SERVER_DB_PASSWORD: example
       TS3SERVER_DB_NAME: teamspeak
       TS3SERVER_DB_WAITUNTILREADY: 30
       TS3SERVER_LICENSE: accept
-  db:
+  teamspeakdb:
     image: mariadb
     restart: always
     environment:
