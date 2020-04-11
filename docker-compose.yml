@@ -8,7 +8,7 @@ services:
     command:
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
-     # - "--entrypoints.http.address=:80"
+      - "--entrypoints.http.address=:80"
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.teamspeakvoice.address=:9987/udp"
       - "--entrypoints.teamspeakquery.address=:10011"
@@ -20,13 +20,20 @@ services:
       #- "--log.level=DEBUG"
       #- "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
     ports:
-      #- "80:80"
+      - "80:80"
       - "443:443"
       - "8080:8080"
       - "9987:9987/udp"
     volumes:
       - "./letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy_public"
+      - "traefik.http.routers.https-redirect.entrypoints=http"
+      - "traefik.http.routers.https-redirect.rule=HostRegexp(`{any:.*}`)"
+      - "traefik.http.routers.https-redirect.middlewares=https-redirect"
+      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
   traefikforward:
     image: thomseddon/traefik-forward-auth
     container_name: traefikforward
@@ -55,8 +62,8 @@ services:
     image: docker.elastic.co/beats/metricbeat:7.6.0
     command: --strict.perms=false -e
     user: root
-    environment: 
-      - "KIBANA_HOST=kibana"
+    depends_on: 
+      - kibana
     volumes:
       - "./metricbeat.yml:/usr/share/metricbeat/metricbeat.yml:ro"
       - /proc:/hostfs/proc:ro
@@ -68,6 +75,8 @@ services:
     image: docker.elastic.co/beats/filebeat:7.6.0
     command: --strict.perms=false -e
     user: root
+    depends_on: 
+      - kibana
     volumes:
       - "./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro"
       - "/var/run/docker.sock:/var/run/docker.sock"
@@ -97,7 +106,68 @@ services:
       - "discovery.type=single-node"
     volumes:
       - esdata:/usr/share/elasticsearch/data 
-  
+
+  owncloud:
+    image: owncloud/server:10.4.0
+    restart: always
+    depends_on:
+      - ownclouddb
+      - redis
+    environment:
+      - OWNCLOUD_DOMAIN=cloud.farsity.de
+      - OWNCLOUD_DB_TYPE=mysql
+      - OWNCLOUD_DB_NAME=owncloud
+      - OWNCLOUD_DB_USERNAME=owncloud
+      - OWNCLOUD_DB_PASSWORD=owncloud
+      - OWNCLOUD_DB_HOST=ownclouddb
+      - OWNCLOUD_ADMIN_USERNAME=admin
+      - OWNCLOUD_ADMIN_PASSWORD=123
+      - OWNCLOUD_MYSQL_UTF8MB4=true
+      - OWNCLOUD_REDIS_ENABLED=true
+      - OWNCLOUD_REDIS_HOST=redis
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.owncloud.rule=Host(`cloud.farsity.de`)"
+      - "traefik.http.routers.owncloud.entrypoints=websecure"
+      - "traefik.http.routers.owncloud.tls.certresolver=myresolver"
+    healthcheck:
+      test: ["CMD", "/usr/bin/healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - files:/mnt/data
+  ownclouddb:
+    image: webhippie/mariadb:latest
+    restart: always
+    environment:
+      - MARIADB_ROOT_PASSWORD=owncloud
+      - MARIADB_USERNAME=owncloud
+      - MARIADB_PASSWORD=owncloud
+      - MARIADB_DATABASE=owncloud
+      - MARIADB_MAX_ALLOWED_PACKET=128M
+      - MARIADB_INNODB_LOG_FILE_SIZE=64M
+    healthcheck:
+      test: ["CMD", "/usr/bin/healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - mysql:/var/lib/mysql
+      - backup:/var/lib/backup
+  redis:
+    image: webhippie/redis:latest
+    restart: always
+    environment:
+      - REDIS_DATABASES=1
+    healthcheck:
+      test: ["CMD", "/usr/bin/healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - redis:/var/lib/redis
+
   whoamisecure:
     image: containous/whoami
     labels:
@@ -142,4 +212,8 @@ services:
   #     MYSQL_DATABASE: teamspeak
 volumes:
   esdata:
-    driver: local
+  redis:
+  files:
+  mysql:
+  backup:
+  redis:
