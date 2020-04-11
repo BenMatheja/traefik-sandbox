@@ -34,6 +34,8 @@ services:
       - "traefik.http.routers.https-redirect.rule=HostRegexp(`{any:.*}`)"
       - "traefik.http.routers.https-redirect.middlewares=https-redirect"
       - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
+    networks:
+      - web
   traefikforward:
     image: thomseddon/traefik-forward-auth
     container_name: traefikforward
@@ -57,6 +59,8 @@ services:
       - "traefik.http.routers.traefikforward.entrypoints=websecure"
       - "traefik.http.routers.traefikforward.tls.certresolver=myresolver"
       - "traefik.http.routers.traefikforward.rule=Host(`auth.farsity.de`)"
+    networks: 
+      - web
   metricbeat:
     container_name: "metricbeat"
     image: docker.elastic.co/beats/metricbeat:7.6.0
@@ -70,6 +74,8 @@ services:
       - /sys/fs/cgroup:/hostfs/sys/fs/cgroup:ro
       - /:/hostfs:ro
       - /var/run/docker.sock:/var/run/docker.sock
+    networks: 
+      - elastic
   filebeat:
     container_name: "filebeat"
     image: docker.elastic.co/beats/filebeat:7.6.0
@@ -84,6 +90,8 @@ services:
       - "/var/lib/docker/containers/:/var/lib/docker/containers/:ro"
       # This is needed for filebeat to load logs for system and auth modules
       - "/var/log/:/var/log/:ro"
+    networks: 
+      - elastic
   kibana:
     image: docker.elastic.co/kibana/kibana:7.6.0
     container_name: "kibana"
@@ -99,13 +107,18 @@ services:
       - "traefik.http.middlewares.kibana.forwardauth.authResponseHeaders=X-Forwarded-User"
       - "traefik.http.middlewares.kibana.forwardauth.authResponseHeaders=X-Auth-User, X-Secret"
       - "traefik.http.middlewares.kibana.forwardauth.trustForwardHeader=true"
+    networks:
+      - elastic
+      - web
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.6.0
     container_name: elasticsearch
     environment:
       - "discovery.type=single-node"
     volumes:
-      - esdata:/usr/share/elasticsearch/data 
+      - esdata:/usr/share/elasticsearch/data
+    networks:
+      - elastic
 
   owncloud:
     image: owncloud/server:10.4.0
@@ -137,6 +150,9 @@ services:
       retries: 5
     volumes:
       - files:/mnt/data
+    networks:
+      - web
+      - owncloud
   ownclouddb:
     image: webhippie/mariadb:latest
     restart: always
@@ -155,6 +171,8 @@ services:
     volumes:
       - mysql:/var/lib/mysql
       - backup:/var/lib/backup
+    networks:
+      - owncloud
   redis:
     image: webhippie/redis:latest
     restart: always
@@ -167,6 +185,8 @@ services:
       retries: 5
     volumes:
       - redis:/var/lib/redis
+    networks:
+      - owncloud
 
   whoamisecure:
     image: containous/whoami
@@ -188,6 +208,8 @@ services:
       - "traefik.http.middlewares.whoamisecure.forwardauth.authResponseHeaders=X-Forwarded-User"
       - "traefik.http.middlewares.whoamisecure.forwardauth.authResponseHeaders=X-Auth-User, X-Secret"
       - "traefik.http.middlewares.whoamisecure.forwardauth.trustForwardHeader=true"
+    networks:
+      - web
   # teamspeak:
   #   image: teamspeak
   #   labels:
@@ -217,3 +239,7 @@ volumes:
   mysql:
   backup:
   redis:
+networks: 
+  web:
+  elastic:
+  owncloud:
