@@ -1,0 +1,33 @@
+name: Deploy to Farsity
+on:
+  push:
+    branches:
+    - 'feature/*'
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Lint Configuration
+        run: docker-compose -f docker-compose.yml config
+  test:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build the stack
+        run: docker-compose up -d
+      - name: Test Traefik exposes HTTP
+        run: docker run --network container:traefik appropriate/curl -s --retry 10 --retry-connrefused http://localhost
+      - name: Test Traefik exposes HTTPS
+        run: docker run --network container:traefik appropriate/curl -s --retry 10 --retry-connrefused https://localhost --insecure
+      - name: Test Traefik Forward Auth Access
+        run: docker run --network container:traefik appropriate/curl -s --retry 10 --retry-connrefused http://traefikforward:4181
+      - name: Test Elasticsearch Access
+        run: docker run --network container:traefik appropriate/curl -s --retry 10 --retry-connrefused http://elasticsearch:9200
+      - name: Test Kibana Access
+        run: docker run --network container:traefik appropriate/curl -s --retry 10 --retry-connrefused http://kibana:5601
+      - name: Test Owncloud Access
+        run: docker run --network container:traefik appropriate/curl -s --retry 10 --retry-connrefused http://owncloud:8080
+      - name: Bring Stack down
+        run: docker-compose down

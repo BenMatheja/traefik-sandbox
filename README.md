@@ -1,14 +1,17 @@
 # traefik-sandbox
+![Deploy to Farsity](https://github.com/BenMatheja/traefik-sandbox/workflows/Deploy%20to%20Farsity/badge.svg?branch=master)
+
 How to put self-hosted services in container and connect them with a smart edge router handling https certificates.
 All the steps were done using the awesome [traefik documentation](https://docs.traefik.io/)
 
 `` docker-compose.yml `` features
 
 * Using traefik as edge router handling Letsencrypt certificate delivery
-* Domain (farsity.de) with multiple subdomains (api and blog) running sample services (whoami)
-* api.farsity.de is secured via Forward Authentication with Google oAuth
-* An UDP router for supporting teamspeak3 traffic
-* Exposed traefik api and dashboard - Obviously not for productive use!
+* Domain (http://farsity.de) with multiple subdomains (api, kibana, cloud) running sample services (whoami, kibana, owncloud)
+* Redirect HTTP to HTTPS traffic
+* https://api.farsity.de is secured via Forward Authentication with Google oAuth
+* Add UDP router for supporting teamspeak3 traffic
+* Filebeat and Metricbeat to monitor proceedings
 
 ## Secure a Service with Forward Authentication
 To setup Forward Authentication via external idP i'm using the traefik-forward-auth container of thomseddon.
