@@ -60,7 +60,7 @@ jobs:
         KEY: ${{ secrets.KEY }}
       with:
         source: "."
-        target: "/root/traefik-sandbox"
+        target: "/opt/"
     
     - name: List repository of Deployhost
       uses: appleboy/ssh-action@master
@@ -68,7 +68,7 @@ jobs:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.KEY }}
-        script: ls -al /root/traefik-sandbox/
+        script: ls -al /opt/
 
     - name: Restart Stack
       uses: appleboy/ssh-action@master
