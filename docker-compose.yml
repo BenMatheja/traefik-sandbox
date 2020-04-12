@@ -57,6 +57,23 @@ services:
       - "traefik.http.routers.traefikforward.entrypoints=websecure"
       - "traefik.http.routers.traefikforward.tls.certresolver=myresolver"
       - "traefik.http.routers.traefikforward.rule=Host(`auth.farsity.de`)"
+  restic:
+    restart: always
+    image: oursource/restic:latest
+    hostname: backup
+    domainname: domain.com
+    container_name: restic
+    volumes:
+      - /:/data
+    environment:
+      - CRON_BACKUP_EXPRESSION="15   3  *   *   *"
+      - RESTIC_BACKUP_OPTIONS="--exclude=/data/dir/*"
+      - RESTIC_REPOSITORY="s3:https://s3.amazonaws.com/some-repo"
+      - AWS_ACCESS_KEY_ID="keyid"
+      - AWS_SECRET_ACCESS_KEY="topsecret"
+      - RESTIC_PASSWORD="some_good_hash"
+
+      
   metricbeat:
     container_name: "metricbeat"
     image: docker.elastic.co/beats/metricbeat:7.6.0
@@ -188,28 +205,28 @@ services:
       - "traefik.http.middlewares.whoamisecure.forwardauth.authResponseHeaders=X-Forwarded-User"
       - "traefik.http.middlewares.whoamisecure.forwardauth.authResponseHeaders=X-Auth-User, X-Secret"
       - "traefik.http.middlewares.whoamisecure.forwardauth.trustForwardHeader=true"
-  # teamspeak:
-  #   image: teamspeak
-  #   labels:
-  #     - "traefik.enable=true"
-  #     - "traefik.udp.routers.teamspeak.entrypoints=teamspeakvoice"
-  #     - "traefik.tcp.routers.teamspeak.entrypoints=teamspeakquery"
-  #   restart: always
-  #   environment:
-  #     TS3SERVER_DB_PLUGIN: ts3db_mariadb
-  #     TS3SERVER_DB_SQLCREATEPATH: create_mariadb
-  #     TS3SERVER_DB_HOST: teamspeakdb
-  #     TS3SERVER_DB_USER: root
-  #     TS3SERVER_DB_PASSWORD: example
-  #     TS3SERVER_DB_NAME: teamspeak
-  #     TS3SERVER_DB_WAITUNTILREADY: 30
-  #     TS3SERVER_LICENSE: accept
-  # teamspeakdb:
-  #   image: mariadb
-  #   restart: always
-  #   environment:
-  #     MYSQL_ROOT_PASSWORD: example
-  #     MYSQL_DATABASE: teamspeak
+  teamspeak:
+    image: teamspeak
+    labels:
+      - "traefik.enable=true"
+      - "traefik.udp.routers.teamspeak.entrypoints=teamspeakvoice"
+      - "traefik.tcp.routers.teamspeak.entrypoints=teamspeakquery"
+    restart: always
+    environment:
+      TS3SERVER_DB_PLUGIN: ts3db_mariadb
+      TS3SERVER_DB_SQLCREATEPATH: create_mariadb
+      TS3SERVER_DB_HOST: teamspeakdb
+      TS3SERVER_DB_USER: root
+      TS3SERVER_DB_PASSWORD: example
+      TS3SERVER_DB_NAME: teamspeak
+      TS3SERVER_DB_WAITUNTILREADY: 30
+      TS3SERVER_LICENSE: accept
+  teamspeakdb:
+    image: mariadb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: example
+      MYSQL_DATABASE: teamspeak
 volumes:
   esdata:
   redis:
