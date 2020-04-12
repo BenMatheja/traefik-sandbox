@@ -9,7 +9,9 @@ jobs:
         run: docker-compose -f docker-compose.yml config
       - name: Build the stack
         run: docker-compose up -d
-      - name: Test HTTP
+      - name: Test Traefik exposes HTTP
         run: docker run --network container:traefik appropriate/curl -s --retry 10 --retry-connrefused http://localhost
-      - name: Test HTTPS
+      - name: Test Traefik exposes HTTPS
         run: docker run --network container:traefik appropriate/curl -s --retry 10 --retry-connrefused https://localhost --insecure
+	  - name: Test Elasticsearch Access
+	    run: docker run --network container:traefik appropriate/curl -s --retry 10 --retry-connrefused http://elasticsearch:9200
