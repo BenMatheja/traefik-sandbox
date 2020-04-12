@@ -19,5 +19,7 @@ jobs:
         run: docker run --network container:traefik appropriate/curl -s --retry 10 --retry-connrefused http://elasticsearch:9200
       - name: Test Kibana Access
         run: docker run --network container:traefik appropriate/curl -s --retry 10 --retry-connrefused http://kibana:5601
+      - name: Test Kibana Access
+        run: docker run --network container:traefik appropriate/curl -s --retry 10 --retry-connrefused http://owncloud:8080
       - name: Bring Stack down
         run: docker-compose down
