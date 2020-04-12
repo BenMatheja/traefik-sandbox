@@ -184,28 +184,28 @@ services:
       - "traefik.http.middlewares.whoamisecure.forwardauth.authResponseHeaders=X-Forwarded-User"
       - "traefik.http.middlewares.whoamisecure.forwardauth.authResponseHeaders=X-Auth-User, X-Secret"
       - "traefik.http.middlewares.whoamisecure.forwardauth.trustForwardHeader=true"
-  # teamspeak:
-  #   image: teamspeak
-  #   labels:
-  #     - "traefik.enable=true"
-  #     - "traefik.udp.routers.teamspeak.entrypoints=teamspeakvoice"
-  #     - "traefik.tcp.routers.teamspeak.entrypoints=teamspeakquery"
-  #   restart: always
-  #   environment:
-  #     TS3SERVER_DB_PLUGIN: ts3db_mariadb
-  #     TS3SERVER_DB_SQLCREATEPATH: create_mariadb
-  #     TS3SERVER_DB_HOST: teamspeakdb
-  #     TS3SERVER_DB_USER: root
-  #     TS3SERVER_DB_PASSWORD: example
-  #     TS3SERVER_DB_NAME: teamspeak
-  #     TS3SERVER_DB_WAITUNTILREADY: 30
-  #     TS3SERVER_LICENSE: accept
-  # teamspeakdb:
-  #   image: mariadb
-  #   restart: always
-  #   environment:
-  #     MYSQL_ROOT_PASSWORD: example
-  #     MYSQL_DATABASE: teamspeak
+  teamspeak:
+    image: teamspeak
+    labels:
+      - "traefik.enable=true"
+      - "traefik.udp.routers.teamspeak.entrypoints=teamspeakvoice"
+      - "traefik.tcp.routers.teamspeak.entrypoints=teamspeakquery"
+    restart: always
+    environment:
+      TS3SERVER_DB_PLUGIN: ts3db_mariadb
+      TS3SERVER_DB_SQLCREATEPATH: create_mariadb
+      TS3SERVER_DB_HOST: teamspeakdb
+      TS3SERVER_DB_USER: root
+      TS3SERVER_DB_PASSWORD: example
+      TS3SERVER_DB_NAME: teamspeak
+      TS3SERVER_DB_WAITUNTILREADY: 30
+      TS3SERVER_LICENSE: accept
+  teamspeakdb:
+    image: mariadb
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: example
+      MYSQL_DATABASE: teamspeak
 volumes:
   esdata:
   redis:
