@@ -8,6 +8,6 @@ jobs:
       - name: Build the stack
         run: docker-compose up -d
       - name: Test HTTP
-        run: docker run appropriate/curl -s --retry 10 --retry-connrefused http://localhost
+        run: docker run --network container:traefik appropriate/curl -s --retry 10 --retry-connrefused http://localhost
       - name: Test HTTPS
-        run: docker run appropriate/curl -s --retry 10 --retry-connrefused https://localhost
+        run: docker run --network container:traefik appropriate/curl -s --retry 10 --retry-connrefused https://localhost
