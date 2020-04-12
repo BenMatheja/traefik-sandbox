@@ -39,7 +39,8 @@ jobs:
     - name: pwd
       run: |
         pwd
-        ls -al
+        ls -al /home/runner/work/traefik-sandbox/traefik-sandbox
+        ls -al /home/runner/work/traefik-sandbox
         whoami
     - name: Check Connection to Deployhost
       uses: appleboy/ssh-action@master
