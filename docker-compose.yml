@@ -17,7 +17,7 @@ services:
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
       # These here are both debug settings, remove them for production use
       # - "--api.insecure=true"
-      #- "--log.level=DEBUG"
+      - "--log.level=${TRAEFIK_LOG_LEVEL}"
       #- "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
     ports:
       - "80:80"
@@ -29,7 +29,6 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=proxy_public"
       - "traefik.http.routers.https-redirect.entrypoints=http"
       - "traefik.http.routers.https-redirect.rule=HostRegexp(`{any:.*}`)"
       - "traefik.http.routers.https-redirect.middlewares=https-redirect"
@@ -38,17 +37,14 @@ services:
     image: thomseddon/traefik-forward-auth
     container_name: traefikforward
     environment:
-      # These Variables are injected via environment file
-      #- PROVIDERS_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-      #- PROVIDERS_GOOGLE_CLIENT_SECRET=GOOGLE_CLIENT_SECRET
-      #- SECRET=${SECRET}
-      #- INSECURE_COOKIE=true # Example assumes no https, do not use in production
-      #- WHITELIST=${WHITELIST}
-      - DOMAIN=farsity.de
-      - AUTH_HOST=auth.farsity.de
-      - LOG_LEVEL=debug
-    env_file: 
-      - ./traefik-auth.env
+      - PROVIDERS_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - PROVIDERS_GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - SECRET=${SECRET}
+      - INSECURE_COOKIE=${INSECURE_COOKIE} # Example assumes no https, do not use in production
+      - WHITELIST=${WHITELIST}
+      - DOMAIN=${DOMAIN}
+      - AUTH_HOST=${AUTH_HOST}
+      - LOG_LEVEL=${TRAEFIKFORWARD_LOG_LEVEL}
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.traefikforward.loadbalancer.server.port=4181"
@@ -56,7 +52,7 @@ services:
       - "traefik.http.middlewares.traefikforward.redirectscheme.permanent=true"
       - "traefik.http.routers.traefikforward.entrypoints=websecure"
       - "traefik.http.routers.traefikforward.tls.certresolver=myresolver"
-      - "traefik.http.routers.traefikforward.rule=Host(`auth.farsity.de`)"
+      - "traefik.http.routers.traefikforward.rule=Host(`${AUTH_HOST}`)"
   restic:
     restart: always
     image: oursource/restic:latest
@@ -76,7 +72,7 @@ services:
       
   metricbeat:
     container_name: "metricbeat"
-    image: docker.elastic.co/beats/metricbeat:7.6.0
+    image: docker.elastic.co/beats/metricbeat:${ELASTIC_VERSION}
     command: --strict.perms=false -e
     user: root
     depends_on: 
@@ -89,7 +85,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
   filebeat:
     container_name: "filebeat"
-    image: docker.elastic.co/beats/filebeat:7.6.0
+    image: docker.elastic.co/beats/filebeat:${ELASTIC_VERSION}
     command: --strict.perms=false -e
     user: root
     depends_on: 
@@ -102,12 +98,12 @@ services:
       # This is needed for filebeat to load logs for system and auth modules
       - "/var/log/:/var/log/:ro"
   kibana:
-    image: docker.elastic.co/kibana/kibana:7.6.0
+    image: docker.elastic.co/kibana/kibana:${ELASTIC_VERSION}
     container_name: "kibana"
     labels:
       - "traefik.enable=true"
     #     Route which handles HTTPS Traffic
-      - "traefik.http.routers.kibana.rule=Host(`kibana.farsity.de`)"
+      - "traefik.http.routers.kibana.rule=Host(`${KIBANA_DOMAIN}`)"
       - "traefik.http.routers.kibana.entrypoints=websecure"
       - "traefik.http.routers.kibana.tls.certresolver=myresolver"
     #     Apply Forward Auth to the Service 
@@ -117,7 +113,7 @@ services:
       - "traefik.http.middlewares.kibana.forwardauth.authResponseHeaders=X-Auth-User, X-Secret"
       - "traefik.http.middlewares.kibana.forwardauth.trustForwardHeader=true"
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.6.0
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_VERSION}
     container_name: elasticsearch
     environment:
       - "discovery.type=single-node"
@@ -131,20 +127,20 @@ services:
       - ownclouddb
       - redis
     environment:
-      - OWNCLOUD_DOMAIN=cloud.farsity.de
+      - OWNCLOUD_DOMAIN=${OWNCLOUD_DOMAIN}
       - OWNCLOUD_DB_TYPE=mysql
-      - OWNCLOUD_DB_NAME=owncloud
-      - OWNCLOUD_DB_USERNAME=owncloud
-      - OWNCLOUD_DB_PASSWORD=owncloud
-      - OWNCLOUD_DB_HOST=ownclouddb
-      - OWNCLOUD_ADMIN_USERNAME=admin
-      - OWNCLOUD_ADMIN_PASSWORD=123
+      - OWNCLOUD_DB_NAME=${OWNCLOUD_DB_NAME}
+      - OWNCLOUD_DB_USERNAME=${OWNCLOUD_DB_USERNAME}
+      - OWNCLOUD_DB_PASSWORD=${OWNCLOUD_DB_PASSWORD}
+      - OWNCLOUD_DB_HOST=${OWNCLOUD_DB_HOST}
+      - OWNCLOUD_ADMIN_USERNAME=${OWNCLOUD_ADMIN_USERNAME}
+      - OWNCLOUD_ADMIN_PASSWORD=${OWNCLOUD_ADMIN_PASSWORD}
       - OWNCLOUD_MYSQL_UTF8MB4=true
       - OWNCLOUD_REDIS_ENABLED=true
       - OWNCLOUD_REDIS_HOST=redis
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.owncloud.rule=Host(`cloud.farsity.de`)"
+      - "traefik.http.routers.owncloud.rule=Host(`${OWNCLOUD_DOMAIN}`)"
       - "traefik.http.routers.owncloud.entrypoints=websecure"
       - "traefik.http.routers.owncloud.tls.certresolver=myresolver"
     healthcheck:
@@ -158,10 +154,10 @@ services:
     image: webhippie/mariadb:latest
     restart: always
     environment:
-      - MARIADB_ROOT_PASSWORD=owncloud
-      - MARIADB_USERNAME=owncloud
-      - MARIADB_PASSWORD=owncloud
-      - MARIADB_DATABASE=owncloud
+      - MARIADB_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD}
+      - MARIADB_USERNAME=${MARIADB_USERNAME}
+      - MARIADB_PASSWORD=${MARIADB_PASSWORD}
+      - MARIADB_DATABASE=${MARIADB_DATABASE}
       - MARIADB_MAX_ALLOWED_PACKET=128M
       - MARIADB_INNODB_LOG_FILE_SIZE=64M
     healthcheck:
