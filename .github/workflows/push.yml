@@ -12,10 +12,8 @@ jobs:
       - name: Test Traefik exposes HTTP
         run: docker run --network container:traefik appropriate/curl -s --retry 10 --retry-connrefused http://localhost
       - name: Test Traefik exposes HTTPS
-		run: docker run --network container:traefik appropriate/curl -s --retry 10 --retry-connrefused https://localhost --insecure
-	  - name: Test Traefik Forward Auth Access
-		run: docker run --network container:traefik appropriate/curl -s --retry 10 --retry-connrefused http://traefikforward:4181
-	  - name: Test Elasticsearch Access
-		run: docker run --network container:traefik appropriate/curl -s --retry 10 --retry-connrefused http://elasticsearch:9200
-
-		
+        run: docker run --network container:traefik appropriate/curl -s --retry 10 --retry-connrefused https://localhost --insecure
+      - name: Test Traefik Forward Auth Access
+        run: docker run --network container:traefik appropriate/curl -s --retry 10 --retry-connrefused http://traefikforward:4181
+      - name: Test Elasticsearch Access
+        run: docker run --network container:traefik appropriate/curl -s --retry 10 --retry-connrefused http://elasticsearch:9200
