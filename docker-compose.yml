@@ -37,7 +37,6 @@ services:
     image: thomseddon/traefik-forward-auth
     container_name: traefikforward
     environment:
-      # These Variables are injected via environment file
       - PROVIDERS_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - PROVIDERS_GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - SECRET=${SECRET}
@@ -45,9 +44,7 @@ services:
       - WHITELIST=${WHITELIST}
       - DOMAIN=${DOMAIN}
       - AUTH_HOST=${AUTH_HOST}
-      - LOG_LEVEL=${TRAEFIK_LOG_LEVEL}
-#    env_file: 
-#      - ./traefik-auth.env
+      - LOG_LEVEL=${TRAEFIKFORWARD_LOG_LEVEL}
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.traefikforward.loadbalancer.server.port=4181"
