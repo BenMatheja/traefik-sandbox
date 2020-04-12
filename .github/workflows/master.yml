@@ -36,10 +36,8 @@ jobs:
     #needs: test
     runs-on: ubuntu-latest
     steps:
-    - name: Show working directory
-      run: ls -al
-    - name: pwd
-      run: pwd
+    - name: Show contents of working directory
+      run: ls -al ${pwd}
     - name: Check Connection to Deployhost
       uses: appleboy/ssh-action@master
       with:
