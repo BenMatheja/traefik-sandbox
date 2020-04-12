@@ -47,8 +47,8 @@ services:
       - DOMAIN=farsity.de
       - AUTH_HOST=auth.farsity.de
       - LOG_LEVEL=debug
-    env_file: 
-      - ./traefik-auth.env
+#    env_file: 
+#      - ./traefik-auth.env
     labels:
       - "traefik.enable=true"
       - "traefik.http.services.traefikforward.loadbalancer.server.port=4181"
