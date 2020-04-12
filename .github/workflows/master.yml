@@ -1,5 +1,8 @@
-name: docker-compose-actions-workflow
-on: push
+name: Deploy to Farsity
+on:
+  push:
+    branches:
+    - master
 jobs:
   lint:
     runs-on: ubuntu-latest
