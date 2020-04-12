@@ -76,3 +76,15 @@ jobs:
           cd /opt/traefik-sandbox
           docker-compose down
           docker-compose up -d
+  validate:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test Traefik exposes HTTP
+        run: docker run --network container:traefik appropriate/curl -s --retry 10 --retry-connrefused http://farsity.de
+      - name: Test Traefik exposes HTTPS
+        run: docker run --network container:traefik appropriate/curl -s --retry 10 --retry-connrefused https://farsity.de 
+      - name: Test Kibana Access
+        run: docker run --network container:traefik appropriate/curl -s --retry 10 --retry-connrefused https://kibana.farsity.de
+      - name: Test Owncloud Access
+        run: docker run --network container:traefik appropriate/curl -s --retry 10 --retry-connrefused https://cloud.farsity.de
