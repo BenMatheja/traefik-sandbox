@@ -3,7 +3,7 @@ name: Deploy to Farsity.de
 on:
   push:
     branches:
-    - master
+    - 'master'
     tags:
     - '*'
 jobs:
