@@ -17,7 +17,7 @@ services:
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
       # These here are both debug settings, remove them for production use
       # - "--api.insecure=true"
-      #- "--log.level=DEBUG"
+      - "--log.level=${TRAEFIK_LOG_LEVEL}"
       #- "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
     ports:
       - "80:80"
@@ -45,7 +45,7 @@ services:
       - WHITELIST=${WHITELIST}
       - DOMAIN=${DOMAIN}
       - AUTH_HOST=${AUTH_HOST}
-      - LOG_LEVEL=debug
+      - LOG_LEVEL=${TRAEFIK_LOG_LEVEL}
 #    env_file: 
 #      - ./traefik-auth.env
     labels:
