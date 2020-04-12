@@ -36,6 +36,11 @@ jobs:
     #needs: test
     runs-on: ubuntu-latest
     steps:
+    - name: pwd
+      run: |
+        pwd
+        ls -al
+        whoami
     - name: Check Connection to Deployhost
       uses: appleboy/ssh-action@master
       with:
