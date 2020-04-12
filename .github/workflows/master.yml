@@ -1,4 +1,5 @@
-name: Deploy to Farsity
+# This deployment only occurs when a new tag is pushed to master
+name: Deploy to Farsity.de
 on:
   push:
     branches:
