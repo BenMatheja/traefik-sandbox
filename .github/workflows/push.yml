@@ -23,7 +23,9 @@ jobs:
         run: docker run --network container:traefik appropriate/curl -s --retry 10 --retry-connrefused http://owncloud:8080
       - name: Bring Stack down
         run: docker-compose down
+
   deploy:
+    needs: test
     runs-on: ubuntu-latest
     steps:
     - name: executing remote ssh commands using password
