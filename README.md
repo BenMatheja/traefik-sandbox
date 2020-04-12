@@ -1,4 +1,5 @@
 # traefik-sandbox
+![Deploy to Farsity](https://github.com/BenMatheja/traefik-sandbox/workflows/Deploy%20to%20Farsity/badge.svg?branch=master)
 How to put self-hosted services in container and connect them with a smart edge router handling https certificates.
 All the steps were done using the awesome [traefik documentation](https://docs.traefik.io/)
 
