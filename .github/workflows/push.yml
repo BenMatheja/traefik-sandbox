@@ -4,6 +4,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
       - name: Lint Configuration
         run: docker-compose -f docker-compose.yml config
   test:
