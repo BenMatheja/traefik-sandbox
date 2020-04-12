@@ -53,7 +53,7 @@ jobs:
         source: "."
         target: "/root/"
     - name: List repository to Deployhost
-      uses: appleboy/ssh-action@master
+      uses: appleboy/ssh-action@v0.0.1
       with:
         host: farsity.de
         username: ${{ secrets.USERNAME }}
