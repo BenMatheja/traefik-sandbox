@@ -56,18 +56,16 @@ services:
   restic:
     restart: always
     image: oursource/restic:latest
-    hostname: backup
-    domainname: domain.com
     container_name: restic
     volumes:
       - /:/data
     environment:
-      - CRON_BACKUP_EXPRESSION="15   3  *   *   *"
-      - RESTIC_BACKUP_OPTIONS="--exclude=/data/dir/*"
-      - RESTIC_REPOSITORY="s3:https://s3.amazonaws.com/some-repo"
-      - AWS_ACCESS_KEY_ID="keyid"
-      - AWS_SECRET_ACCESS_KEY="topsecret"
-      - RESTIC_PASSWORD="some_good_hash"
+      - CRON_BACKUP_EXPRESSION=${CRON_BACKUP_EXPRESSION}
+      - RESTIC_BACKUP_OPTIONS=${RESTIC_BACKUP_OPTIONS}
+      - RESTIC_REPOSITORY=${RESTIC_REPOSITORY}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - RESTIC_PASSWORD=${RESTIC_PASSWORD}
 
       
   metricbeat:
