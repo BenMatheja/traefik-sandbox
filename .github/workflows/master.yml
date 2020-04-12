@@ -50,7 +50,7 @@ jobs:
         USERNAME: ${{ secrets.USERNAME }}
         KEY: ${{ secrets.DEPLOYKEY }}
       with:
-        source: "."
+        source: "*"
         target: "/root/traefik-sandbox/"
     - name: List repository to Deployhost
       uses: appleboy/ssh-action@master
