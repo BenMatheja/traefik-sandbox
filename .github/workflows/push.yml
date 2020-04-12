@@ -39,13 +39,13 @@ jobs:
         host: farsity.de
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.DEPLOYKEY }}
-        script: pwd
+        script: hostname
     - name: Copy files via scp
       uses: appleboy/scp-action@master
       env:
-        host: farsity.de
-        username: ${{ secrets.USERNAME }}
-        key: ${{ secrets.DEPLOYKEY }}
+        HOST: farsity.de
+        USERNAME: ${{ secrets.USERNAME }}
+        KEY: ${{ secrets.DEPLOYKEY }}
       with:
         source: "."
         target: "/root/traefik-sandbox/"
@@ -56,3 +56,13 @@ jobs:
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.DEPLOYKEY }}
         script: ls -al
+    - name: Restart Stack
+      uses: appleboy/ssh-action@master
+      with:
+        host: farsity.de
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.DEPLOYKEY }}
+        script: |
+          ls -al
+          docker-compose down -d
+          docker-compose up -d
