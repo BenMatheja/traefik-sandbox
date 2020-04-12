@@ -32,7 +32,9 @@ jobs:
         run: docker run --network container:traefik appropriate/curl -s --retry 10 --retry-connrefused http://owncloud:8080
       - name: Bring Stack down
         run: docker-compose down
+  # Run Deployjob on new Tags on Master branch
   deploy:
+    if: github.event.base_ref == 'refs/heads/master'
     needs: test
     runs-on: ubuntu-latest
     steps:
