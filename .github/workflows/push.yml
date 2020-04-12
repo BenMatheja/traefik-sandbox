@@ -1,12 +1,16 @@
 name: docker-compose-actions-workflow
 on: push
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Lint Configuration
+        run: docker-compose -f docker-compose.yml config
   test:
+    needs: lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Read Configuration
-        run: docker-compose -f docker-compose.yml config
       - name: Build the stack
         run: docker-compose up -d
       - name: Test Traefik exposes HTTP
