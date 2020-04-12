@@ -60,7 +60,7 @@ jobs:
         KEY: ${{ secrets.KEY }}
       with:
         source: "."
-        target: "/opt/"
+        target: "/opt/traefik-sandbox"
     
     - name: List repository of Deployhost
       uses: appleboy/ssh-action@master
@@ -68,7 +68,7 @@ jobs:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.KEY }}
-        script: ls -al /opt/
+        script: ls -al /opt/traefik-sandbox
 
     - name: Restart Stack
       uses: appleboy/ssh-action@master
@@ -77,6 +77,6 @@ jobs:
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.KEY }}
         script: |
-          cd /root/traefik-sandbox
+          cd /opt/traefik-sandbox
           docker-compose down
           docker-compose up -d
