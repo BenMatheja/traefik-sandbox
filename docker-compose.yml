@@ -39,11 +39,11 @@ services:
     container_name: traefikforward
     environment:
       # These Variables are injected via environment file
-      #- PROVIDERS_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-      #- PROVIDERS_GOOGLE_CLIENT_SECRET=GOOGLE_CLIENT_SECRET
-      #- SECRET=${SECRET}
-      #- INSECURE_COOKIE=true # Example assumes no https, do not use in production
-      #- WHITELIST=${WHITELIST}
+      - PROVIDERS_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - PROVIDERS_GOOGLE_CLIENT_SECRET=GOOGLE_CLIENT_SECRET
+      - SECRET=${SECRET}
+      - INSECURE_COOKIE=true # Example assumes no https, do not use in production
+      - WHITELIST=${WHITELIST}
       - DOMAIN=farsity.de
       - AUTH_HOST=auth.farsity.de
       - LOG_LEVEL=debug
