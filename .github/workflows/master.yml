@@ -43,13 +43,13 @@ jobs:
         ls -al /home/runner/work/traefik-sandbox/traefik-sandbox
         ls -al /home/runner/work/traefik-sandbox
         whoami
-    # - name: Check Connection to Deployhost
-    #   uses: appleboy/ssh-action@master
-    #   with:
-    #     HOST: farsity.de
-    #     USERNAME: ${{ secrets.USERNAME }}
-    #     KEY: ${{ secrets.DEPLOYKEY }}
-    #     SCRIPT: hostname
+    - name: Check Connection to Deployhost
+      uses: appleboy/ssh-action@master
+      with:
+        HOST: farsity.de
+        USERNAME: ${{ secrets.USERNAME }}
+        KEY: ${{ secrets.DEPLOYKEY }}
+        SCRIPT: hostname
 
     - name: Copy files via scp
       uses: appleboy/scp-action@master
@@ -60,13 +60,15 @@ jobs:
       with:
         source: "."
         target: "/root/traefik-sandbox"
-    - name: List repository to Deployhost
+    
+    - name: List repository of Deployhost
       uses: appleboy/ssh-action@master
       with:
         host: farsity.de
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.DEPLOYKEY }}
         script: ls -al /root/traefik-sandbox/
+        
     - name: Restart Stack
       uses: appleboy/ssh-action@master
       with:
