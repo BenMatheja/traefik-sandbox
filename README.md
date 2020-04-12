@@ -10,7 +10,7 @@ All the steps were done using the awesome [traefik documentation](https://docs.t
 * Domain (http://farsity.de) with multiple subdomains (api, kibana, cloud) running sample services (whoami, kibana, owncloud)
 * Redirect HTTP to HTTPS traffic
 * https://api.farsity.de is secured via Forward Authentication with Google oAuth
-* Add UDP router for supporting teamspeak3 traffic
+* Add UDP router for supporting teamspeak3 traffic at (farsity.de)
 * Filebeat and Metricbeat to monitor proceedings
 
 ## Secure a Service with Forward Authentication
