@@ -33,7 +33,7 @@ jobs:
   #       run: docker-compose down
 
   deploy:
-    needs: test
+    #needs: test
     runs-on: ubuntu-latest
     steps:
     - name: Show working directory
